@@ -1,6 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
-import DashboardPage from './pages/DashboardPage';
 import PosPage from './pages/PosPage';
 import CampersPage from './pages/CampersPage';
 import InventoryPage from './pages/InventoryPage';
@@ -15,7 +14,7 @@ function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/" element={<DashboardPage />} />
+      <Route path="/" element={<Navigate to="/pos" replace />} />
       <Route path="/pos" element={<PosPage />} />
       <Route path="/campers" element={<CampersPage />} />
       <Route path="/inventory" element={<InventoryPage />} />

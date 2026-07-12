@@ -24,7 +24,7 @@ function LoginPage() {
 
     const data = await response.json();
     localStorage.setItem('token', data.token);
-    navigate('/');
+    navigate('/pos');
   };
 
   return (

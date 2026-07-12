@@ -28,8 +28,7 @@ const users = [
 
 const transactionLogs: TransactionRecord[] = [];
 const campers: CamperAccount[] = [
-  { id: 'c1', name: 'Maya Chen', camperId: 'C-1001', cabin: 'Pine', balance: 42.5, spendingLimit: 20 },
-  { id: 'c2', name: 'Leo Martinez', camperId: 'C-1002', cabin: 'Cedar', balance: 15.0, spendingLimit: 25 },
+  { id: 'c1', name: 'Test Camper', camperId: 'TEST-001', cabin: 'Demo', balance: 1000, spendingLimit: 1000 },
 ];
 
 router.get('/health', (_req, res) => {
