@@ -19,27 +19,27 @@ function Layout({ children }: LayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100">
-      <header className="border-b border-slate-200 bg-white/90 backdrop-blur">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-cyan-50">
+      <header className="border-b border-emerald-100 bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => navigate(-1)}
-              className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700"
+              onClick={() => navigate('/pos')}
+              className="flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700"
             >
               <ArrowLeft size={16} />
               Back
             </button>
-            <div className="flex items-center gap-2 rounded-2xl bg-emerald-50 px-3 py-2">
+            <div className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-cyan-500 px-3 py-2 text-white">
               <Store size={18} className="text-emerald-600" />
               <div>
-                <div className="text-sm font-semibold text-slate-900">Camp Canteen</div>
-                <div className="text-xs text-slate-500">POS Demo</div>
+                <div className="text-sm font-semibold text-white">Camp Canteen</div>
+                <div className="text-xs text-emerald-50">POS Demo</div>
               </div>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-right">
+            <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-3 py-2 text-right">
               <div className="text-sm font-semibold text-slate-900">{userName}</div>
               <div className="text-xs text-slate-500">{userRole}</div>
             </div>
