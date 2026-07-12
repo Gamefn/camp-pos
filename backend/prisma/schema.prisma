@@ -1,0 +1,206 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  users       User[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model User {
+  id           String      @id @default(uuid())
+  name         String
+  email        String      @unique
+  passwordHash String
+  roleId       String
+  role         Role        @relation(fields: [roleId], references: [id])
+  auditLogs    AuditLog[]
+  orders       Order[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([email])
+}
+
+model Guardian {
+  id          String   @id @default(uuid())
+  name        String
+  email       String?
+  phone       String?
+  campers     Camper[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Camper {
+  id            String        @id @default(uuid())
+  camperId      String        @unique
+  name          String
+  cabin         String?
+  age           Int?
+  medicalNotes  String?
+  dietaryNotes  String?
+  spendingLimit Float?
+  balance       Float         @default(0)
+  guardianId    String?
+  guardian      Guardian?     @relation(fields: [guardianId], references: [id])
+  transactions  Transaction[]
+  orders        Order[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([camperId])
+}
+
+model Category {
+  id          String     @id @default(uuid())
+  name        String     @unique
+  description String?
+  products    Product[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Product {
+  id            String        @id @default(uuid())
+  name          String
+  sku           String?       @unique
+  price         Float
+  cost          Float?
+  description   String?
+  imageUrl      String?
+  categoryId    String?
+  category      Category?     @relation(fields: [categoryId], references: [id])
+  stock         Int           @default(0)
+  unit          String?
+  available     Boolean       @default(true)
+  mealPeriod    String?
+  recipes       Recipe[]
+  orderItems    OrderItem[]
+  inventory     Inventory[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([name])
+}
+
+model Supplier {
+  id          String          @id @default(uuid())
+  name        String
+  contactName String?
+  phone       String?
+  email       String?
+  purchaseOrders PurchaseOrder[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model Inventory {
+  id            String          @id @default(uuid())
+  productId     String
+  product       Product         @relation(fields: [productId], references: [id])
+  quantity      Int
+  reorderLevel  Int?
+  location      String?
+  purchaseOrders PurchaseOrder[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model PurchaseOrder {
+  id            String      @id @default(uuid())
+  supplierId    String
+  supplier      Supplier    @relation(fields: [supplierId], references: [id])
+  inventoryId   String?
+  inventory     Inventory?  @relation(fields: [inventoryId], references: [id])
+  quantity      Int
+  status        String      @default("PENDING")
+  expectedDate  DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Recipe {
+  id            String      @id @default(uuid())
+  productId     String
+  product       Product     @relation(fields: [productId], references: [id])
+  ingredient    String
+  quantity      Float
+  unit          String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Order {
+  id            String        @id @default(uuid())
+  orderNumber   String        @unique
+  userId        String
+  user          User          @relation(fields: [userId], references: [id])
+  camperId      String?
+  camper        Camper?       @relation(fields: [camperId], references: [id])
+  status        String        @default("NEW")
+  subtotal      Float
+  tax           Float         @default(0)
+  total         Float
+  paymentMethod String
+  items         OrderItem[]
+  payments      Payment[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([orderNumber])
+}
+
+model OrderItem {
+  id           String   @id @default(uuid())
+  orderId      String
+  order        Order    @relation(fields: [orderId], references: [id])
+  productId    String
+  product      Product  @relation(fields: [productId], references: [id])
+  quantity     Int
+  unitPrice    Float
+  total        Float
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Payment {
+  id            String   @id @default(uuid())
+  orderId       String
+  order         Order    @relation(fields: [orderId], references: [id])
+  method        String
+  amount        Float
+  status        String   @default("PAID")
+  transactionId String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Transaction {
+  id            String   @id @default(uuid())
+  camperId      String
+  camper        Camper   @relation(fields: [camperId], references: [id])
+  type          String
+  amount        Float
+  description   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  action      String
+  details     String?
+  createdAt   DateTime @default(now())
+}

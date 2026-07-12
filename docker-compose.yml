@@ -1,0 +1,21 @@
+version: '3.9'
+services:
+  backend:
+    image: node:22-alpine
+    working_dir: /app
+    volumes:
+      - ./:/app
+    command: sh -c "npm install && npm run dev --workspace backend"
+    ports:
+      - "4000:4000"
+    environment:
+      - PORT=4000
+      - JWT_SECRET=camp-canteen-pos-secret
+  frontend:
+    image: node:22-alpine
+    working_dir: /app
+    volumes:
+      - ./:/app
+    command: sh -c "npm install && npm run dev --workspace frontend -- --host 0.0.0.0"
+    ports:
+      - "5173:5173"

@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: camp-canteen-frontend
+    env: node
+    buildCommand: npm install && npm run build --workspace frontend
+    startCommand: npm run dev --workspace frontend -- --host 0.0.0.0
+    envVars:
+      - key: NODE_ENV
+        value: production
+  - type: web
+    name: camp-canteen-backend
+    env: node
+    buildCommand: npm install && npm run build --workspace backend
+    startCommand: npm run start --workspace backend
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        value: camp-canteen-pos-secret
