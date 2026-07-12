@@ -2,19 +2,12 @@ import { Router } from 'express';
 import { signToken, verifyToken } from './auth.js';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
+import { applyTransactionToCampers, type CamperAccount, type TransactionLogEntry, type TransactionPayload } from './transactions.js';
 
 const router = Router();
 const loginSchema = z.object({ email: z.string().email(), password: z.string().min(6) });
 
-interface TransactionRecord {
-  id: string;
-  camperId: string | null;
-  camperName: string | null;
-  paymentMethod: 'Camp Credit' | 'Cash';
-  amount: number;
-  items: Array<{ id: string; name: string; quantity: number; price: number }>;
-  createdAt: string;
-}
+type TransactionRecord = TransactionLogEntry;
 
 const users = [
   {
@@ -34,6 +27,10 @@ const users = [
 ];
 
 const transactionLogs: TransactionRecord[] = [];
+const campers: CamperAccount[] = [
+  { id: 'c1', name: 'Maya Chen', camperId: 'C-1001', cabin: 'Pine', balance: 42.5, spendingLimit: 20 },
+  { id: 'c2', name: 'Leo Martinez', camperId: 'C-1002', cabin: 'Cedar', balance: 15.0, spendingLimit: 25 },
+];
 
 router.get('/health', (_req, res) => {
   res.json({ ok: true, message: 'Camp Canteen POS API is running' });
@@ -83,10 +80,7 @@ router.get('/products', (_req, res) => {
 });
 
 router.get('/campers', (_req, res) => {
-  res.json([
-    { id: 'c1', name: 'Maya Chen', camperId: 'C-1001', cabin: 'Pine', balance: 42.5, spendingLimit: 20 },
-    { id: 'c2', name: 'Leo Martinez', camperId: 'C-1002', cabin: 'Cedar', balance: 15.0, spendingLimit: 25 },
-  ]);
+  res.json(campers);
 });
 
 router.post('/transactions', (req, res) => {
@@ -102,14 +96,16 @@ router.post('/transactions', (req, res) => {
     return res.status(400).json({ message: 'Invalid transaction payload' });
   }
 
-  const record: TransactionRecord = {
-    id: `txn-${Date.now()}`,
-    ...parsed.data,
-    createdAt: new Date().toISOString(),
-  };
+  try {
+    const payload: TransactionPayload = parsed.data;
+    const { logEntry } = applyTransactionToCampers(campers, payload);
 
-  transactionLogs.unshift(record);
-  res.json(record);
+    transactionLogs.unshift(logEntry);
+    res.json(logEntry);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unable to process transaction';
+    return res.status(400).json({ message });
+  }
 });
 
 router.get('/transactions/logs', (_req, res) => {

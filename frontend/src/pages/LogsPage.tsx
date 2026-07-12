@@ -9,6 +9,9 @@ interface TransactionLog {
   amount: number;
   items: Array<{ name: string; quantity: number; price: number }>;
   createdAt: string;
+  previousBalance: number | null;
+  newBalance: number | null;
+  balanceDelta: number | null;
 }
 
 function LogsPage() {
@@ -44,6 +47,11 @@ function LogsPage() {
                 <div className="text-right">
                   <div className="font-semibold">${log.amount.toFixed(2)}</div>
                   <div className="text-sm text-slate-500">{new Date(log.createdAt).toLocaleString()}</div>
+                  {log.paymentMethod === 'Camp Credit' ? (
+                    <div className="mt-1 text-xs text-slate-500">
+                      Before: ${log.previousBalance?.toFixed(2) ?? '—'} • After: ${log.newBalance?.toFixed(2) ?? '—'}
+                    </div>
+                  ) : null}
                 </div>
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
