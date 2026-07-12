@@ -26,6 +26,7 @@ const users = [
   },
 ];
 
+const MAX_LOG_ENTRIES = 100;
 const transactionLogs: TransactionRecord[] = [];
 const campers: CamperAccount[] = [
   { id: 'c1', name: 'Test Camper', camperId: 'TEST-001', cabin: 'Demo', balance: 1000, spendingLimit: 1000 },
@@ -100,6 +101,9 @@ router.post('/transactions', (req, res) => {
     const { logEntry } = applyTransactionToCampers(campers, payload);
 
     transactionLogs.unshift(logEntry);
+    if (transactionLogs.length > MAX_LOG_ENTRIES) {
+      transactionLogs.length = MAX_LOG_ENTRIES;
+    }
     res.json(logEntry);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unable to process transaction';
@@ -108,7 +112,7 @@ router.post('/transactions', (req, res) => {
 });
 
 router.get('/transactions/logs', (_req, res) => {
-  res.json(transactionLogs);
+  res.json(transactionLogs.slice(0, MAX_LOG_ENTRIES));
 });
 
 router.get('/reports/sales', (_req, res) => {
