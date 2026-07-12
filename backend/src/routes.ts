@@ -6,6 +6,16 @@ import { z } from 'zod';
 const router = Router();
 const loginSchema = z.object({ email: z.string().email(), password: z.string().min(6) });
 
+interface TransactionRecord {
+  id: string;
+  camperId: string | null;
+  camperName: string | null;
+  paymentMethod: 'Camp Credit' | 'Cash';
+  amount: number;
+  items: Array<{ id: string; name: string; quantity: number; price: number }>;
+  createdAt: string;
+}
+
 const users = [
   {
     id: '1',
@@ -22,6 +32,8 @@ const users = [
     role: 'Cashier',
   },
 ];
+
+const transactionLogs: TransactionRecord[] = [];
 
 router.get('/health', (_req, res) => {
   res.json({ ok: true, message: 'Camp Canteen POS API is running' });
@@ -60,10 +72,13 @@ router.get('/dashboard/summary', (req, res) => {
 
 router.get('/products', (_req, res) => {
   res.json([
-    { id: 'p1', name: 'Hamburger Meal', category: 'Lunch', price: 8.5, stock: 32 },
-    { id: 'p2', name: 'Chicken Wrap', category: 'Lunch', price: 6.75, stock: 18 },
-    { id: 'p3', name: 'Fruit Cup', category: 'Snacks', price: 2.5, stock: 47 },
-    { id: 'p4', name: 'Smoothie', category: 'Snacks', price: 4.25, stock: 12 },
+    { id: 'p1', name: 'Hamburger Meal', category: 'Hot Food', price: 8.5, stock: 32 },
+    { id: 'p2', name: 'Chicken Wrap', category: 'Hot Food', price: 6.75, stock: 18 },
+    { id: 'p3', name: 'Pizza Slice', category: 'Hot Food', price: 4.75, stock: 22 },
+    { id: 'p4', name: 'Fruit Cup', category: 'Snacks', price: 2.5, stock: 47 },
+    { id: 'p5', name: 'Pretzel', category: 'Snacks', price: 2.25, stock: 34 },
+    { id: 'p6', name: 'Ice Cream Cone', category: 'Ice Cream', price: 3.75, stock: 15 },
+    { id: 'p7', name: 'Frozen Yogurt', category: 'Ice Cream', price: 4.25, stock: 12 },
   ]);
 });
 
@@ -72,6 +87,33 @@ router.get('/campers', (_req, res) => {
     { id: 'c1', name: 'Maya Chen', camperId: 'C-1001', cabin: 'Pine', balance: 42.5, spendingLimit: 20 },
     { id: 'c2', name: 'Leo Martinez', camperId: 'C-1002', cabin: 'Cedar', balance: 15.0, spendingLimit: 25 },
   ]);
+});
+
+router.post('/transactions', (req, res) => {
+  const parsed = z.object({
+    camperId: z.string().nullable(),
+    camperName: z.string().nullable(),
+    paymentMethod: z.enum(['Camp Credit', 'Cash']),
+    amount: z.number().nonnegative(),
+    items: z.array(z.object({ id: z.string(), name: z.string(), quantity: z.number().int().positive(), price: z.number().nonnegative() })),
+  }).safeParse(req.body);
+
+  if (!parsed.success) {
+    return res.status(400).json({ message: 'Invalid transaction payload' });
+  }
+
+  const record: TransactionRecord = {
+    id: `txn-${Date.now()}`,
+    ...parsed.data,
+    createdAt: new Date().toISOString(),
+  };
+
+  transactionLogs.unshift(record);
+  res.json(record);
+});
+
+router.get('/transactions/logs', (_req, res) => {
+  res.json(transactionLogs);
 });
 
 router.get('/reports/sales', (_req, res) => {

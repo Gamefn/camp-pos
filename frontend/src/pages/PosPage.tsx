@@ -22,13 +22,19 @@ interface CartItem extends Product {
   quantity: number;
 }
 
+const menuTabs = ['All', 'Hot Food', 'Snacks', 'Ice Cream'] as const;
+
+type MenuTab = (typeof menuTabs)[number];
+
 function PosPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [query, setQuery] = useState('');
+  const [activeTab, setActiveTab] = useState<MenuTab>('All');
   const [cart, setCart] = useState<CartItem[]>([]);
   const [campers, setCampers] = useState<Camper[]>([]);
   const [buyerQuery, setBuyerQuery] = useState('');
   const [selectedCamper, setSelectedCamper] = useState<Camper | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<'Camp Credit' | 'Cash'>('Camp Credit');
   const [creditAmount, setCreditAmount] = useState('0');
   const [feedback, setFeedback] = useState<string | null>(null);
 
@@ -62,24 +68,64 @@ function PosPage() {
     return haystack.includes(buyerQuery.toLowerCase());
   });
 
-  const handleCompleteOrder = () => {
-    if (!selectedCamper) {
+  const visibleProducts = products.filter((product) => {
+    const matchesQuery = product.name.toLowerCase().includes(query.toLowerCase());
+    const matchesTab = activeTab === 'All' || product.category === activeTab;
+    return matchesQuery && matchesTab;
+  });
+
+  const resetSale = () => {
+    setCart([]);
+    setBuyerQuery('');
+    setSelectedCamper(null);
+    setCreditAmount('0');
+    setFeedback(null);
+    setActiveTab('All');
+    setQuery('');
+  };
+
+  const handleCompleteOrder = async () => {
+    if (cart.length === 0) {
+      setFeedback('Add at least one item to the order.');
+      return;
+    }
+
+    if (!selectedCamper && paymentMethod === 'Camp Credit') {
       setFeedback('Select a camper buyer first.');
       return;
     }
 
     const amount = Number(creditAmount);
     if (!Number.isFinite(amount) || amount <= 0) {
-      setFeedback('Enter a valid camp credit amount.');
+      setFeedback('Enter a valid charge amount.');
       return;
     }
 
-    if (amount > selectedCamper.balance) {
+    if (paymentMethod === 'Camp Credit' && selectedCamper && amount > selectedCamper.balance) {
       setFeedback(`This camper only has $${selectedCamper.balance.toFixed(2)} available.`);
       return;
     }
 
-    setFeedback(`Order submitted for ${selectedCamper.name} using $${amount.toFixed(2)} in camp credit.`);
+    try {
+      const body = {
+        camperId: selectedCamper?.id ?? null,
+        camperName: selectedCamper?.name ?? null,
+        paymentMethod,
+        amount: Number(subtotal.toFixed(2)),
+        items: cart.map((item) => ({ id: item.id, name: item.name, quantity: item.quantity, price: item.price })),
+      };
+
+      await fetch('/api/transactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      setFeedback(`Order completed for ${selectedCamper?.name ?? 'walk-in customer'} using ${paymentMethod}.`);
+      resetSale();
+    } catch {
+      setFeedback('The sale could not be recorded.');
+    }
   };
 
   return (
@@ -98,8 +144,15 @@ function PosPage() {
               <Search size={18} className="text-slate-400" />
               <input className="ml-3 w-full bg-transparent outline-none" placeholder="Search products or scan barcode" value={query} onChange={(e) => setQuery(e.target.value)} />
             </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {menuTabs.map((tab) => (
+                <button key={tab} onClick={() => setActiveTab(tab)} className={`rounded-full px-3 py-2 text-sm font-medium ${activeTab === tab ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                  {tab === 'All' ? 'All Items' : tab}
+                </button>
+              ))}
+            </div>
             <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {products.filter((product) => product.name.toLowerCase().includes(query.toLowerCase())).map((product) => (
+              {visibleProducts.map((product) => (
                 <button key={product.id} onClick={() => addToCart(product)} className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left transition hover:border-emerald-400 hover:bg-emerald-50">
                   <div className="flex items-center justify-between">
                     <h3 className="font-semibold">{product.name}</h3>
@@ -181,14 +234,21 @@ function PosPage() {
             <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
               <div className="flex items-center gap-2">
                 <CircleDollarSign size={18} className="text-emerald-600" />
-                <h3 className="font-semibold">Camp credit</h3>
+                <h3 className="font-semibold">Payment</h3>
               </div>
-              <label className="mt-3 block text-sm font-medium text-slate-600">Custom credit amount</label>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                {(['Camp Credit', 'Cash'] as const).map((method) => (
+                  <button key={method} onClick={() => { setPaymentMethod(method); setFeedback(null); }} className={`rounded-2xl border px-3 py-2 text-sm font-medium ${paymentMethod === method ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-slate-200 bg-white text-slate-600'}`}>
+                    {method}
+                  </button>
+                ))}
+              </div>
+              <label className="mt-3 block text-sm font-medium text-slate-600">Charge amount</label>
               <input type="number" min="0" step="0.01" className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2" value={creditAmount} onChange={(e) => setCreditAmount(e.target.value)} />
-              <p className="mt-2 text-xs text-slate-500">Charge a custom amount to the camper balance. The default amount is the current order total.</p>
+              <p className="mt-2 text-xs text-slate-500">For camp credit, this amount is charged to the camper balance. For cash, it records the sale without touching the balance.</p>
             </div>
             {feedback ? <div className="mt-4 rounded-2xl bg-amber-50 p-3 text-sm text-amber-800">{feedback}</div> : null}
-            <button onClick={handleCompleteOrder} className="mt-6 w-full rounded-2xl bg-slate-900 px-4 py-3 font-semibold text-white">Complete Camp Credit Order</button>
+            <button onClick={handleCompleteOrder} className="mt-6 w-full rounded-2xl bg-slate-900 px-4 py-3 font-semibold text-white">Complete Sale</button>
           </div>
         </div>
       </div>

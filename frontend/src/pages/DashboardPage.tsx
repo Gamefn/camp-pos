@@ -68,6 +68,7 @@ function DashboardPage() {
                 ['Menu Management', '/menu'],
                 ['Kitchen Display', '/kitchen'],
                 ['Reports', '/reports'],
+                ['Transaction Logs', '/logs'],
               ].map(([label, href]) => (
                 <Link key={label} to={href} className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 font-medium text-slate-700">
                   <span>{label}</span>

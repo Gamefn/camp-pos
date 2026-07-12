@@ -9,6 +9,7 @@ import KitchenPage from './pages/KitchenPage';
 import ReportsPage from './pages/ReportsPage';
 import SettingsPage from './pages/SettingsPage';
 import ParentPortalPage from './pages/ParentPortalPage';
+import LogsPage from './pages/LogsPage';
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
       <Route path="/menu" element={<MenuPage />} />
       <Route path="/kitchen" element={<KitchenPage />} />
       <Route path="/reports" element={<ReportsPage />} />
+      <Route path="/logs" element={<LogsPage />} />
       <Route path="/settings" element={<SettingsPage />} />
       <Route path="/parent-portal" element={<ParentPortalPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />

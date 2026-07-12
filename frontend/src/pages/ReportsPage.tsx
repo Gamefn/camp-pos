@@ -1,4 +1,5 @@
 import { BarChart3, FileText } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 function ReportsPage() {
   return (
@@ -10,7 +11,7 @@ function ReportsPage() {
             <h1 className="text-2xl font-semibold">Daily, weekly, and monthly performance insights</h1>
           </div>
           <div className="flex gap-3">
-            <button className="rounded-2xl border border-slate-200 px-4 py-3 font-semibold text-slate-700">CSV Export</button>
+            <Link to="/logs" className="rounded-2xl border border-slate-200 px-4 py-3 font-semibold text-slate-700">View Logs</Link>
             <button className="rounded-2xl bg-emerald-600 px-4 py-3 font-semibold text-white">PDF Report</button>
           </div>
         </div>
